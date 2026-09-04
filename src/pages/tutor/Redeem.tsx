@@ -44,6 +44,7 @@ export function RedeemPage() {
 
   async function handleRedeem() {
     if (!redeemTarget) return;
+    const pointsBeforeRedeem = points?.totalPoints;
     setRedeeming(true);
     try {
       await gamificationService.redeemCoupon(redeemTarget.id);
@@ -51,6 +52,21 @@ export function RedeemPage() {
       setRedeemTarget(null);
       load();
     } catch (err) {
+      try {
+        const pointsAfterRedeem = await gamificationService.getMyPoints();
+        setPoints(pointsAfterRedeem);
+
+        if (
+          pointsBeforeRedeem !== undefined &&
+          pointsAfterRedeem.totalPoints < pointsBeforeRedeem
+        ) {
+          showSuccess(`Cupom "${redeemTarget.title}" resgatado com sucesso!`);
+          setRedeemTarget(null);
+          load();
+          return;
+        }
+      } catch {}
+
       showError(getErrorMessage(err, 'Não foi possível resgatar este cupom.'));
     } finally {
       setRedeeming(false);
