@@ -86,7 +86,10 @@ export function LoginPage() {
         </form>
 
         <p className="mt-6 text-center text-xs text-ink/40">
-          Admin: admin@petflow.com · Tutor: maria@petflow.com
+          Admin: admin@petflow.com - Admin@123
+        </p>
+        <p className="text-center text-xs text-ink/40">
+          Tutor: maria@petflow.com - Tutor@123
         </p>
       </div>
     </div>
