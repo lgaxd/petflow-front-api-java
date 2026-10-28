@@ -1,5 +1,6 @@
 import { Navigate, Route, Routes } from 'react-router-dom';
 import { LoginPage } from '@/pages/Login';
+import { RegisterPage } from '@/pages/Register';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { AdminLayout } from '@/components/layout/AdminLayout';
 import { TutorLayout } from '@/components/layout/TutorLayout';
@@ -17,6 +18,7 @@ export function AppRoutes() {
   return (
     <Routes>
       <Route path="/login" element={<LoginPage />} />
+      <Route path="/register" element={<RegisterPage />} />
 
       {/* Rotas exclusivas do ADMIN */}
       <Route element={<ProtectedRoute allowedRoles={['ADMIN']} />}>

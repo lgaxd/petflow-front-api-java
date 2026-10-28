@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react';
-import { Navigate, useLocation, useNavigate } from 'react-router-dom';
+import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { LogIn, PawPrint } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/contexts/ToastContext';
@@ -84,6 +84,13 @@ export function LoginPage() {
             Entrar
           </button>
         </form>
+
+        <p className="mt-6 text-center text-sm text-ink/60">
+          Ainda não tem conta?{' '}
+          <Link to="/register" className="font-semibold text-brand-700 hover:underline">
+            Criar conta
+          </Link>
+        </p>
 
         <p className="mt-6 text-center text-xs text-ink/40">
           Admin: admin@petflow.com - Admin@123
