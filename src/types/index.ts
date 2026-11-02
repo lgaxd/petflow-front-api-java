@@ -41,6 +41,22 @@ export interface LoginResponse {
   name: string;
   email: string;
   role: UserRole;
+  /** Instante (ISO-8601, UTC) em que o token expira. */
+  expiresAt?: string;
+}
+
+// ---------- Tabelas de domínio ----------
+export interface SpeciesResponse {
+  id: number;
+  name: string;
+  description?: string;
+}
+
+export interface EventTypeResponse {
+  id: number;
+  name: string;
+  pointsReward: number;
+  category: string;
 }
 
 // ---------- Tutor ----------

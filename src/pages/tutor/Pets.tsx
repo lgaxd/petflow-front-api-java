@@ -1,20 +1,19 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { Pencil, PawPrint, Plus, Trash2 } from 'lucide-react';
 import { petService } from '@/services/petService';
+import { referenceService } from '@/services/referenceService';
 import { getErrorMessage } from '@/services/api';
 import { useToast } from '@/contexts/ToastContext';
 import { useAuth } from '@/contexts/AuthContext';
-import type { PetRequest, PetResponse } from '@/types';
+import type { PetRequest, PetResponse, SpeciesResponse } from '@/types';
 import { LoadingSpinner, InlineSpinner } from '@/components/common/LoadingSpinner';
 import { ErrorState } from '@/components/common/ErrorState';
 import { ConfirmDialog } from '@/components/common/ConfirmDialog';
 import { FormModal, Field, inputClass } from '@/components/common/FormModal';
 import { EmptyState, Pagination } from '@/components/common/ListHelpers';
 
-const speciesLabels: Record<number, string> = { 1: 'Cachorro', 2: 'Gato', 3: 'Ave', 4: 'Roedor' };
-
-function emptyForm(tutorId: number): PetRequest {
-  return { name: '', breed: '', birthDate: '', weight: undefined, tutorId, speciesId: 1 };
+function emptyForm(tutorId: number, speciesId: number): PetRequest {
+  return { name: '', breed: '', birthDate: '', weight: undefined, tutorId, speciesId };
 }
 
 export function PetsPage() {
@@ -29,7 +28,8 @@ export function PetsPage() {
 
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<PetResponse | null>(null);
-  const [form, setForm] = useState<PetRequest>(emptyForm(user?.id ?? 0));
+  const [species, setSpecies] = useState<SpeciesResponse[]>([]);
+  const [form, setForm] = useState<PetRequest>(emptyForm(user?.id ?? 0, 0));
   const [saving, setSaving] = useState(false);
 
   const [deleteTarget, setDeleteTarget] = useState<PetResponse | null>(null);
@@ -51,9 +51,17 @@ export function PetsPage() {
 
   useEffect(load, [page, user]);
 
+  useEffect(() => {
+    referenceService.species().then(setSpecies).catch(() => setSpecies([]));
+  }, []);
+
+  function speciesName(id: number) {
+    return species.find((s) => s.id === id)?.name ?? `Espécie #${id}`;
+  }
+
   function openCreate() {
     setEditing(null);
-    setForm(emptyForm(user?.id ?? 0));
+    setForm(emptyForm(user?.id ?? 0, species[0]?.id ?? 0));
     setModalOpen(true);
   }
 
@@ -141,7 +149,7 @@ export function PetsPage() {
                     <div>
                       <p className="font-medium text-ink">{pet.name}</p>
                       <p className="text-xs text-ink/45">
-                        {speciesLabels[pet.speciesId] ?? `Espécie #${pet.speciesId}`} · {pet.breed || 'SRD'}
+                        {speciesName(pet.speciesId)} · {pet.breed || 'SRD'}
                       </p>
                     </div>
                   </div>
@@ -200,9 +208,9 @@ export function PetsPage() {
               value={form.speciesId}
               onChange={(e) => setForm({ ...form, speciesId: Number(e.target.value) })}
             >
-              {Object.entries(speciesLabels).map(([id, label]) => (
-                <option key={id} value={id}>
-                  {label}
+              {species.map((s) => (
+                <option key={s.id} value={s.id}>
+                  {s.name}
                 </option>
               ))}
             </select>

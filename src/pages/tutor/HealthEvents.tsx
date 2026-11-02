@@ -2,32 +2,34 @@ import { useEffect, useState, type FormEvent } from 'react';
 import { Activity, Plus, Trash2 } from 'lucide-react';
 import { healthEventService } from '@/services/healthEventService';
 import { petService } from '@/services/petService';
+import { referenceService } from '@/services/referenceService';
 import { clinicService } from '@/services/clinicService';
 import { getErrorMessage } from '@/services/api';
 import { useToast } from '@/contexts/ToastContext';
 import { useAuth } from '@/contexts/AuthContext';
-import type { ClinicResponse, HealthEventRequest, HealthEventResponse, HealthEventStatus, PetResponse } from '@/types';
+import type {
+  ClinicResponse,
+  EventTypeResponse,
+  HealthEventRequest,
+  HealthEventResponse,
+  HealthEventStatus,
+  PetResponse,
+} from '@/types';
 import { LoadingSpinner, InlineSpinner } from '@/components/common/LoadingSpinner';
 import { ErrorState } from '@/components/common/ErrorState';
 import { ConfirmDialog } from '@/components/common/ConfirmDialog';
 import { FormModal, Field, inputClass } from '@/components/common/FormModal';
 import { EmptyState, Pagination, StatusBadge } from '@/components/common/ListHelpers';
 
-const eventTypeLabels: Record<number, string> = {
-  1: 'Vacinação',
-  2: 'Consulta de rotina',
-  3: 'Vermifugação',
-  4: 'Cirurgia',
-};
 const statusOptions: HealthEventStatus[] = ['AGENDADO', 'REALIZADO', 'CANCELADO'];
 
-function emptyForm(petId: number): HealthEventRequest {
+function emptyForm(petId: number, eventTypeId: number): HealthEventRequest {
   return {
     description: '',
     eventDate: new Date().toISOString().slice(0, 10),
     status: 'AGENDADO',
     petId,
-    eventTypeId: 1,
+    eventTypeId,
     clinicId: undefined,
   };
 }
@@ -45,7 +47,8 @@ export function HealthEventsPage() {
   const [error, setError] = useState<string | null>(null);
 
   const [modalOpen, setModalOpen] = useState(false);
-  const [form, setForm] = useState<HealthEventRequest>(emptyForm(0));
+  const [eventTypes, setEventTypes] = useState<EventTypeResponse[]>([]);
+  const [form, setForm] = useState<HealthEventRequest>(emptyForm(0, 0));
   const [saving, setSaving] = useState(false);
 
   const [deleteTarget, setDeleteTarget] = useState<HealthEventResponse | null>(null);
@@ -56,6 +59,14 @@ export function HealthEventsPage() {
     petService.findAll({ tutorId: user.id, size: 100 }).then((data) => setPets(data.content)).catch(() => setPets([]));
     clinicService.findAll({ size: 100 }).then((data) => setClinics(data.content)).catch(() => setClinics([]));
   }, [user]);
+
+  useEffect(() => {
+    referenceService.eventTypes().then(setEventTypes).catch(() => setEventTypes([]));
+  }, []);
+
+  function eventTypeName(id: number) {
+    return eventTypes.find((t) => t.id === id)?.name ?? `Tipo #${id}`;
+  }
 
   function load() {
     if (pets.length === 0) {
@@ -80,7 +91,7 @@ export function HealthEventsPage() {
   useEffect(load, [pets, page]);
 
   function openCreate() {
-    setForm(emptyForm(pets[0]?.id ?? 0));
+    setForm(emptyForm(pets[0]?.id ?? 0, eventTypes[0]?.id ?? 0));
     setModalOpen(true);
   }
 
@@ -163,7 +174,7 @@ export function HealthEventsPage() {
                       <Activity className="h-4 w-4 text-brand-500" />
                       <div>
                         <p className="font-medium text-ink">
-                          {eventTypeLabels[event.eventTypeId] ?? `Tipo #${event.eventTypeId}`}
+                          {eventTypeName(event.eventTypeId)}
                         </p>
                         <p className="text-xs text-ink/45">{event.description || '—'}</p>
                       </div>
@@ -216,9 +227,9 @@ export function HealthEventsPage() {
               value={form.eventTypeId}
               onChange={(e) => setForm({ ...form, eventTypeId: Number(e.target.value) })}
             >
-              {Object.entries(eventTypeLabels).map(([id, label]) => (
-                <option key={id} value={id}>
-                  {label}
+              {eventTypes.map((t) => (
+                <option key={t.id} value={t.id}>
+                  {t.name}
                 </option>
               ))}
             </select>
